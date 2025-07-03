@@ -1,0 +1,39 @@
+{
+	"server_name": "localhost",
+	"http": {
+		"enabled": true,
+		"port": 8080
+	},
+	"logs": {
+		"dir": "./logs/nginx"
+	},
+	"static_serving": [
+		{
+			"url_path": "/synego",
+			"root_path": "../src"
+		},
+		{
+			"url_path": "/",
+			"root_path": "./site"
+		}
+	],
+	"reverse_proxy": [
+		{
+			"enabled": true,
+			"url_path": "/api",
+			"pass_to": "http://localhost:3000"
+		},
+		{
+			"enabled": true,
+			"type": "websocket",
+			"url_path": "/ws/",
+			"pass_to": "http://localhost:3000/"
+		}
+	],
+	"extras": [
+		{
+			"url": "/synego/sw.js",
+			"location": "add_header 'Service-Worker-Allowed' '/';\n\t\t\talias /Users/zhanglei/MyWorks/SynegoBlade/src/sw.js;"
+		}
+	]
+}

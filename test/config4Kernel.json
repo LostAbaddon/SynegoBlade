@@ -1,0 +1,9 @@
+{
+	"http": {
+		"enabled": true,
+		"port": 3000
+	},
+	"ws": {
+		"enabled": true
+	}
+}

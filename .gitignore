@@ -137,3 +137,14 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+.DS_Store
+
+*/uploads
+/test/logs
+/test/temp_uploads
+/test/uploads
+/test/*.sh
+/test/*.bat
+/test/*.key
+/test/*.crt

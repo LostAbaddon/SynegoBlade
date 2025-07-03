@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SynegoBlade Demo</title>
+<link rel="stylesheet" href="/synego/style.css">
+<link rel="manifest" href="/manifest.json">
+</head>
+<body>
+<div class="container">
+	<h1>SynegoBlade Demo</h1>
+
+	<div>
+		<h2>Data Binding</h2>
+		<p>Hello, <span model="user.name"></span>!</p>
+		<input type="text" model="user.name">
+	</div>
+
+	<div>
+		<h2>Event Handling</h2>
+		<button onclick="app.methods.greet()">Greet</button>
+		<input type="text" placeholder="Type and press Enter" onkeydown="if(event.keyCode===13) app.methods.logValue(event)">
+	</div>
+
+	<div>
+		<h2>Status</h2>
+		<p>Current network status:</p>
+		<div id="status" class="status">Unknown</div>
+	</div>
+</div>
+
+<script src="/synego/synego.js"></script>
+<script src="/synego/synego-pwa.js"></script>
+<script>
+    // Initialize Synego
+    const app = new Synego({
+        data: {
+            user: {
+                name: 'World'
+            }
+        },
+        methods: {
+            greet() {
+                alert('Hello, ' + app.data.user.name);
+            },
+            logValue(event) {
+                console.log('Entered value:', event.target.value);
+            }
+        }
+    });
+</script>
+</body>
+</html>

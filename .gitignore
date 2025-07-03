@@ -148,3 +148,4 @@ vite.config.ts.timestamp-*
 /test/*.bat
 /test/*.key
 /test/*.crt
+/test/*.pem

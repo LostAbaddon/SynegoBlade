@@ -4,6 +4,13 @@
 		"enabled": true,
 		"port": 8080
 	},
+	"https": {
+		"enabled": true,
+		"port": 8443,
+		"force_https_redirect": true,
+		"ssl_certificate": "./localhost.pem",
+		"ssl_certificate_key": "./localhost-key.pem"
+	},
 	"logs": {
 		"dir": "./logs/nginx"
 	},

@@ -1,12 +1,26 @@
 // SynegoBlade Service Worker - SWR with Update Notification
 
-const CACHE_NAME = 'synego-cache-v1'; // Updated version
+const CACHE_NAME = 'synego-cache-v1';
 const APP_SHELL_URLS = [
 	'/',
 	'/index.html',
 	'/synego/sw.js'
 	// Other core assets can be pre-cached here if necessary
 ];
+
+let cacheExclusionPrefixes = [];
+
+// Listen for messages from clients (main app)
+self.addEventListener('message', event => {
+	if (event.data && event.data.type === 'SET_CACHE_EXCLUSIONS') {
+		cacheExclusionPrefixes = event.data.prefixes || [];
+		console.log('SW cache exclusion prefixes have been updated:', cacheExclusionPrefixes);
+	}
+	if (event.data && event.data.type === 'SKIP_WAITING') {
+		self.skipWaiting();
+	}
+});
+
 
 // 1. Install: Cache the core App Shell and prepare to take control
 self.addEventListener('install', event => {
@@ -47,29 +61,39 @@ self.addEventListener('activate', event => {
 
 // 3. Fetch: Implement Stale-While-Revalidate with update notification
 self.addEventListener('fetch', event => {
-	// We only want to apply SWR to GET requests
-	if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
+	const request = event.request;
+
+	// We only want to apply SWR to GET requests for http/https protocols
+	if (request.method !== 'GET' || !request.url.startsWith('http')) {
 		return;
 	}
-	console.log('SW Fetch:', event.request.url);
 
-	// For all other assets (CSS, JS, images), use SWR.
+	const url = new URL(request.url);
+
+	// Check if the URL should be excluded from cache
+	const isExcluded = cacheExclusionPrefixes.some(prefix => url.pathname.startsWith(prefix));
+	if (isExcluded) {
+		console.log('SW Fetch (network only for excluded path):', request.url);
+		event.respondWith(fetch(request)); // Go directly to the network
+		return;
+	}
+
+	// For all other assets, use Stale-While-Revalidate.
 	event.respondWith(
 		caches.open(CACHE_NAME).then(cache => {
-			return cache.match(event.request).then(cachedResponse => {
+			return cache.match(request).then(cachedResponse => {
 				const fetchPromise = (notifyWhileUpdate) => {
-					return fetch(event.request).then(networkResponse => {
+					return fetch(request).then(networkResponse => {
 						// If the fetch is successful, update the cache and notify clients
 						if (networkResponse.ok) {
-							console.log('   - Got network resource:', event.request.url);
 							const responseToCache = networkResponse.clone();
-							cache.put(event.request, responseToCache).then(() => {
+							cache.put(request, responseToCache).then(() => {
 								// Compare responses before notifying
 								if (cachedResponse && !responsesAreSame(cachedResponse, networkResponse)) {
 									if (!!notifyWhileUpdate) {
-										console.log('   - Update resource:', event.request.url);
+										console.log('Update resource:', request.url);
 										self.clients.matchAll().then(clients => {
-											clients.forEach(client => client.postMessage({ type: 'UPDATE_AVAILABLE', url: event.request.url }));
+											clients.forEach(client => client.postMessage({ type: 'UPDATE_AVAILABLE', url: request.url }));
 										});
 									}
 								}
@@ -81,13 +105,10 @@ self.addEventListener('fetch', event => {
 
 				// Return cached response immediately, while the fetch happens in the background
 				if (!cachedResponse) {
-					console.log('   - Fetch network resource:', event.request.url);
 					return fetchPromise(false);
 				}
 				else {
-					console.log('   - Use cached resource:', event.request.url);
 					setTimeout(() => {
-						console.log('   - Fetch for latest resource:', event.request.url);
 						fetchPromise(true);
 					}, 0);
 					return cachedResponse;

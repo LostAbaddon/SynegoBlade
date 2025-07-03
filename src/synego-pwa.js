@@ -1,13 +1,14 @@
 // SynegoBlade PWA Client-side Manager
 
 class SynegoPWA {
-	constructor(swPath = '/synego/sw.js') {
-		this.swPath = swPath;
+	constructor(options = {}) {
+		this.swPath = options.swPath || '/synego/sw.js';
+		this.cacheExclusionPrefixes = options.cacheExclusionPrefixes || [];
 		this.registration = null;
-		this._init();
+		this.init();
 	}
 
-	_init() {
+	init() {
 		if ('serviceWorker' in navigator) {
 			window.addEventListener('load', () => {
 				this.registerServiceWorker();
@@ -21,8 +22,31 @@ class SynegoPWA {
 			this.registration = await navigator.serviceWorker.register(this.swPath, { scope: '/' });
 			console.log('ServiceWorker registration successful with scope: ', this.registration.scope);
 			this.startHeartbeat();
+			this.sendCacheExclusionPrefixes();
 		} catch (err) {
 			console.log('ServiceWorker registration failed: ', err);
+		}
+	}
+
+	sendCacheExclusionPrefixes() {
+		const send = () => {
+			if (navigator.serviceWorker.controller) {
+				navigator.serviceWorker.controller.postMessage({
+					type: 'SET_CACHE_EXCLUSIONS',
+					prefixes: this.cacheExclusionPrefixes
+				});
+			}
+			else {
+				console.warn('Send CacheExclusion to SW failed! SW isn\'t ready now.');
+			}
+		};
+
+		if (navigator.serviceWorker.controller) {
+			send();
+		}
+		else {
+			// This event listener will fire when the service worker has taken control
+			navigator.serviceWorker.addEventListener('controllerchange', send);
 		}
 	}
 
@@ -35,14 +59,6 @@ class SynegoPWA {
 			if (statusEl) {
 				statusEl.textContent = isOnline ? 'Online' : 'Offline';
 				statusEl.className = 'status ' + (isOnline ? 'online' : 'offline');
-			}
-
-			// Send heartbeat to Service Worker
-			if (this.registration && this.registration.active) {
-				this.registration.active.postMessage({
-					type: 'HEARTBEAT',
-					status: isOnline ? 'online' : 'offline'
-				});
 			}
 		}, 5000); // Check every 5 seconds
 	}
@@ -69,6 +85,9 @@ class SynegoPWA {
 
 			document.getElementById('refresh-button').addEventListener('click', () => {
 				this.requestSkipWaiting();
+				setTimeout(() => {
+					location.reload();
+				}, 1000);
 			});
 		}
 		toast.classList.add('show');
@@ -86,6 +105,3 @@ class SynegoPWA {
 		}
 	}
 }
-
-// Initialize PWA management
-window.synegoPWA = new SynegoPWA();

@@ -30,25 +30,12 @@
 	</div>
 </div>
 
-<script src="/synego/synego.js"></script>
 <script src="/synego/synego-pwa.js"></script>
 <script>
-    // Initialize Synego
-    const app = new Synego({
-        data: {
-            user: {
-                name: 'World'
-            }
-        },
-        methods: {
-            greet() {
-                alert('Hello, ' + app.data.user.name);
-            },
-            logValue(event) {
-                console.log('Entered value:', event.target.value);
-            }
-        }
-    });
+// Initialize PWA management, providing prefixes to exclude from cache
+window.synegoPWA = new SynegoPWA({
+	cacheExclusionPrefixes: ['/api']
+});
 </script>
 </body>
 </html>

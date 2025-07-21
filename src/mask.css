@@ -1,0 +1,19 @@
+.screenMask {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 1000;
+	background-color: rgba(225, 225, 235, 0);
+	backdrop-filter: blur(0px);
+	pointer-events: none;
+}
+.screenMask.active {
+	transition: all ease-in-out 250ms;
+	pointer-events: all;
+}
+.screenMask.show {
+	background-color: rgba(225, 225, 235, 0.1);
+	backdrop-filter: blur(2px);
+}
